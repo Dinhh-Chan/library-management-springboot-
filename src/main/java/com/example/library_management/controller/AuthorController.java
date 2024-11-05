@@ -2,6 +2,7 @@ package com.example.library_management.controller;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,7 +23,7 @@ import com.example.library_management.service.AuthorService;
 public class AuthorController {
     
     private final AuthorService authorService;
-
+    @Autowired
     public AuthorController(AuthorService authorService){
         this.authorService = authorService;
     }

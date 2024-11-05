@@ -4,7 +4,9 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.WeekFields;
 import java.util.List;
+import java.util.Locale;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,21 +16,26 @@ import com.example.library_management.entity.Inventory;
 import com.example.library_management.entity.Reader;
 import com.example.library_management.enums.BorrowingStatus;
 import com.example.library_management.exception.ResourceNotFoundException;
-import com.example.library_management.repository.BookRepository;
-import com.example.library_management.repository.BorrowingRepository;
-import com.example.library_management.repository.ReaderRepository;
+import com.example.library_management.repository.elasticsearch.BorrowingElasticsearchRepository;
+import com.example.library_management.repository.jpa.BookRepository;
+import com.example.library_management.repository.jpa.BorrowingRepository;
+import com.example.library_management.repository.jpa.ReaderRepository;
 
 @Service
 public class BorrowingService {
     
     private final BorrowingRepository borrowingRepository;
+    private final BorrowingElasticsearchRepository borrowingElasticsearchRepository;
     private final ReaderRepository readerRepository;
     private final BookRepository bookRepository;
 
+    @Autowired
     public BorrowingService(BorrowingRepository borrowingRepository,
+                            BorrowingElasticsearchRepository borrowingElasticsearchRepository,
                             ReaderRepository readerRepository,
                             BookRepository bookRepository){
         this.borrowingRepository = borrowingRepository;
+        this.borrowingElasticsearchRepository = borrowingElasticsearchRepository;
         this.readerRepository = readerRepository;
         this.bookRepository = bookRepository;
     }
@@ -55,14 +62,14 @@ public class BorrowingService {
         
         // Kiểm tra số lượng sách có sẵn
         Inventory inventory = book.getInventory();
-        if(inventory.getAvailableStock() <= 0){
+        if(inventory == null || inventory.getAvailableStock() <= 0){
             throw new IllegalStateException("No available stock for book id " + bookId);
         }
         
         // Giảm số lượng sách có sẵn
         inventory.setAvailableStock(inventory.getAvailableStock() - 1);
         // Cập nhật Inventory
-        book.getInventory().setAvailableStock(inventory.getAvailableStock());
+        bookRepository.save(book); // Đảm bảo thay đổi được lưu
         
         // Tạo Borrowing
         Borrowing borrowing = new Borrowing();
@@ -72,7 +79,9 @@ public class BorrowingService {
         borrowing.setReturnDate(returnDate);
         borrowing.setStatus(BorrowingStatus.DANG_MUON);
         
-        return borrowingRepository.save(borrowing);
+        Borrowing savedBorrowing = borrowingRepository.save(borrowing);
+        borrowingElasticsearchRepository.save(savedBorrowing);
+        return savedBorrowing;
     }
 
     // Cập nhật lần mượn (ví dụ: trả sách)
@@ -90,41 +99,77 @@ public class BorrowingService {
         
         // Tăng số lượng sách có sẵn
         Inventory inventory = borrowing.getBook().getInventory();
-        inventory.setAvailableStock(inventory.getAvailableStock() + 1);
+        if(inventory != null){
+            inventory.setAvailableStock(inventory.getAvailableStock() + 1);
+            bookRepository.save(borrowing.getBook());
+        }
         
-        return borrowingRepository.save(borrowing);
+        Borrowing updatedBorrowing = borrowingRepository.save(borrowing);
+        borrowingElasticsearchRepository.save(updatedBorrowing);
+        return updatedBorrowing;
     }
 
     // Xóa lần mượn
     public void deleteBorrowing(Long id){
         borrowingRepository.deleteById(id);
+        borrowingElasticsearchRepository.deleteById(id);
     }
 
-
-    public List<Borrowing> getBorrowingsByWeek(int year, int week) {
-        LocalDate startDate = LocalDate.ofYearDay(year, 1).with(WeekFields.ISO.weekOfYear(), week).with(DayOfWeek.MONDAY);
-        LocalDate endDate = startDate.plusDays(6);
-
-        return borrowingRepository.findByBorrowDateBetween(startDate, endDate);
-    }
-
-    public List<Borrowing> getBorrowingsByMonth(int year, int month) {
-        LocalDate startDate = LocalDate.of(year, month, 1);
-        LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
-
-        return borrowingRepository.findByBorrowDateBetween(startDate, endDate);
-    }
-
-    public List<Borrowing> getBorrowingsByYear(int year) {
-        LocalDate startDate = LocalDate.of(year, 1, 1);
-        LocalDate endDate = startDate.withDayOfYear(startDate.lengthOfYear());
-
-        return borrowingRepository.findByBorrowDateBetween(startDate, endDate);
-    }
-
-    public long countBorrowingsByStatus(List<Borrowing> borrowings, BorrowingStatus status) {
-        return borrowings.stream().filter(borrowing -> borrowing.getStatus() == status).count();
-    }
     // Thêm các phương thức nghiệp vụ khác nếu cần
+
+    // Tìm kiếm các lần mượn theo trạng thái
+    public List<Borrowing> findByStatus(BorrowingStatus status){
+        return borrowingElasticsearchRepository.findByStatus(status);
+    }
+
+    // Tìm kiếm các lần mượn chứa từ khóa trong trạng thái
+    public List<Borrowing> searchByStatusKeyword(String keyword){
+        return borrowingElasticsearchRepository.findByStatusContaining(keyword);
+    }
+    public List<Borrowing> searchBorrowingsByBorrowDateRange(LocalDate startDate, LocalDate endDate) {
+        return borrowingRepository.findByBorrowDateBetween(startDate, endDate);
+    }
+        public List<Borrowing> getBorrowingsByWeek(int year, int week) {
+        // Sử dụng WeekFields để xác định ngày bắt đầu của tuần
+        WeekFields weekFields = WeekFields.of(Locale.getDefault());
+        LocalDate startOfWeek = LocalDate
+                .now()
+                .withYear(year)
+                .with(weekFields.weekOfWeekBasedYear(), week)
+                .with(DayOfWeek.MONDAY);
+        LocalDate endOfWeek = startOfWeek.plusDays(6);
+
+        return borrowingRepository.findByBorrowDateBetween(startOfWeek, endOfWeek);
+    }
+
+    /**
+     * Tìm các giao dịch mượn trong một tháng cụ thể của năm
+     * @param year Năm cần tìm
+     * @param month Số tháng trong năm (1-12)
+     * @return Danh sách các giao dịch mượn trong tháng đó
+     */
+    public List<Borrowing> getBorrowingsByMonth(int year, int month) {
+        LocalDate start = LocalDate.of(year, month, 1);
+        LocalDate end = start.plusMonths(1).minusDays(1);
+        return borrowingRepository.findByBorrowDateBetween(start, end);
+    }
+
+    /**
+     * Tìm các giao dịch mượn trong một năm cụ thể
+     * @param year Năm cần tìm
+     * @return Danh sách các giao dịch mượn trong năm đó
+     */
+    public List<Borrowing> getBorrowingsByYear(int year) {
+        LocalDate start = LocalDate.of(year, 1, 1);
+        LocalDate end = LocalDate.of(year, 12, 31);
+        return borrowingRepository.findByBorrowDateBetween(start, end);
+    }
+    public long countBorrowingsByStatus(List<Borrowing> borrowings, BorrowingStatus status) {
+        return borrowings.stream().filter(b -> b.getStatus() == status).count();
+    }
+    public List<Borrowing> searchBorrowingsByStatus(BorrowingStatus status) {
+        return borrowingRepository.findByStatus(status);
+    }
+
 
 }

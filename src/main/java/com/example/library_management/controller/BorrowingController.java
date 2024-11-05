@@ -82,7 +82,26 @@ public class BorrowingController {
             return ResponseEntity.notFound().build();
         }
     }
-        @GetMapping("/weekly")
+    // Tìm giao dịch mượn theo trạng thái
+    @GetMapping("/search/status")
+    public ResponseEntity<List<Borrowing>> searchBorrowingsByStatus(@RequestParam BorrowingStatus status){
+        List<Borrowing> borrowings = borrowingService.searchBorrowingsByStatus(status);
+        return ResponseEntity.ok(borrowings);
+    }
+
+    // Tìm giao dịch mượn theo khoảng ngày mượn
+    @GetMapping("/search/borrowDateRange")
+    public ResponseEntity<List<Borrowing>> searchBorrowingsByBorrowDateRange(
+            @RequestParam String startDate,
+            @RequestParam String endDate) {
+        LocalDate start = LocalDate.parse(startDate);
+        LocalDate end = LocalDate.parse(endDate);
+        List<Borrowing> borrowings = borrowingService.searchBorrowingsByBorrowDateRange(start, end);
+        return ResponseEntity.ok(borrowings);
+    }
+
+    // Các API thống kê (tuần, tháng, năm)
+    @GetMapping("/weekly")
     public ResponseEntity<Map<String, Long>> getWeeklyBorrowings(
             @RequestParam int year,
             @RequestParam int week) {
@@ -111,11 +130,12 @@ public class BorrowingController {
         return ResponseEntity.ok(summary);
     }
 
+    // Phương thức hỗ trợ tạo tóm tắt
     private Map<String, Long> generateSummary(List<Borrowing> borrowings) {
         Map<String, Long> summary = new HashMap<>();
-        summary.put("borrowing", borrowingService.countBorrowingsByStatus(borrowings, BorrowingStatus.DANG_MUON));
-        summary.put("returned", borrowingService.countBorrowingsByStatus(borrowings, BorrowingStatus.DA_TRA));
-        summary.put("overdue", borrowingService.countBorrowingsByStatus(borrowings, BorrowingStatus.QUA_HAN));
+        summary.put("DANG_MUON", borrowingService.countBorrowingsByStatus(borrowings, BorrowingStatus.DANG_MUON));
+        summary.put("DA_TRA", borrowingService.countBorrowingsByStatus(borrowings, BorrowingStatus.DA_TRA));
+        summary.put("QUA_HAN", borrowingService.countBorrowingsByStatus(borrowings, BorrowingStatus.QUA_HAN));
         return summary;
     }
 }

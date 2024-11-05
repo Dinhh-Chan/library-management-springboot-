@@ -1,22 +1,17 @@
 package com.example.library_management.entity;
 
 import java.time.LocalDate;
+import jakarta.persistence.*;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import com.example.library_management.enums.BorrowingStatus;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Entity
 @Table(name = "borrowings")
+@Document(indexName = "borrowings")  // Thêm annotation cho Elasticsearch
 public class Borrowing {
     
     @Id
@@ -26,24 +21,30 @@ public class Borrowing {
     // Mối quan hệ nhiều-một với Reader
     @ManyToOne
     @JoinColumn(name = "reader_id", nullable = false)
+    @JsonBackReference  // Để tránh đệ quy khi serialize JSON
     private Reader reader;
 
     // Mối quan hệ nhiều-một với Book
     @ManyToOne
     @JoinColumn(name = "book_id", nullable = false)
+    @JsonBackReference
     private Book book;
 
     @Column(name = "borrow_date", nullable = false)
+    @Field(type = FieldType.Date)
     private LocalDate borrowDate;
 
     @Column(name = "return_date", nullable = false)
+    @Field(type = FieldType.Date)
     private LocalDate returnDate;
 
     @Column(name = "actual_return_date")
+    @Field(type = FieldType.Date)
     private LocalDate actualReturnDate;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
+    @Field(type = FieldType.Keyword)  // Enum thường được lưu dưới dạng keyword
     private BorrowingStatus status; // DANG_MUON, DA_TRA, QUA_HAN
 
     // Constructors

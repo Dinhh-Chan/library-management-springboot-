@@ -4,19 +4,16 @@ import java.util.Set;
 
 import com.example.library_management.enums.UserRole;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
 @Table(name = "readers")
+@Document(indexName = "readers")  // Thêm annotation cho Elasticsearch
 public class Reader {
     
     @Id
@@ -24,23 +21,29 @@ public class Reader {
     private Long id;
 
     @Column(name = "contact_info")
+    @Field(type = FieldType.Text)
     private String contactInfo;
 
     @Column(name = "quota", nullable = false)
+    @Field(type = FieldType.Integer)
     private Integer quota;
 
     @Column(name = "username", nullable = false, unique = true)
+    @Field(type = FieldType.Keyword)  // Username thường là unique và không cần phân tích
     private String username;
 
     @Column(name = "password", nullable = false)
+    @Field(type = FieldType.Keyword)  // Mật khẩu nên được mã hóa, lưu dưới dạng keyword
     private String password;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
+    @Field(type = FieldType.Keyword)
     private UserRole role; // ADMIN hoặc USER
 
     // Mối quan hệ một-nhiều với Borrowing
     @OneToMany(mappedBy = "reader", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference  // Để tránh đệ quy khi serialize JSON
     private Set<Borrowing> borrowings;
 
     // Constructors

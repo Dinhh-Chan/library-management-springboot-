@@ -1,33 +1,43 @@
 package com.example.library_management.entity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+
+import jakarta.persistence.*;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
 @Table(name ="inventory")
+@Document(indexName = "inventory")  // Thêm annotation cho Elasticsearch
 public class Inventory {
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Long id;
+
     @OneToOne
     @JoinColumn(name="book_id", nullable=false, unique=true)
+    @JsonManagedReference  // Để tránh đệ quy khi serialize JSON
     private Book book;
+
     @Column(name="total_stock", nullable= false)
+    @Field(type = FieldType.Integer)
     private Integer totalStock;
+
     @Column(name="available_stock", nullable=false)
+    @Field(type = FieldType.Integer)
     private Integer availableStock;
+
+    // Constructors
     public Inventory(){};
+
     public Inventory(Book book, Integer totalStock, Integer availableStock) {
         this.book = book;
         this.totalStock = totalStock;
         this.availableStock = availableStock;
     }
 
+    // Getters và Setters
     public Long getId() {
         return id;
     }
@@ -55,5 +65,4 @@ public class Inventory {
 	public void setAvailableStock(Integer availableStock) {
 		this.availableStock = availableStock;
 	}
-    
 }

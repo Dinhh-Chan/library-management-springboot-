@@ -1,4 +1,4 @@
-package com.example.library_management.repository;
+package com.example.library_management.repository.jpa;
 
 import java.time.LocalDate;
 import java.util.List;

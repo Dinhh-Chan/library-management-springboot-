@@ -1,30 +1,43 @@
 package com.example.library_management.entity;
+
 import java.util.Set;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 @Entity
 @Table(name ="authors")
+@Document(indexName = "authors")  // Thêm annotation cho Elasticsearch
 public class Author {
-    @Id
+    @Id 
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Long id; 
-    @Column(name = "name",nullable= false )
+
+    @Column(name = "name", nullable= false )
+    @Field(type = FieldType.Text)
     private String name; 
+
     @Column(name="bio", columnDefinition= "TEXT")
-    private  String bio ;
-    @ManyToMany (mappedBy="authors")
+    @Field(type = FieldType.Text)
+    private String bio ;
+
+    @ManyToMany(mappedBy= "authors")
+    @JsonBackReference  // Để tránh đệ quy khi serialize JSON
     private Set<Book> books;
+
+    // Constructors
     public Author(){}
+
     public Author(String name, String bio){
         this.name = name;
-        this.bio =bio;
+        this.bio = bio;
     }
+
+    // Getters và Setters
     public Long getId() {
         return id;
     }
