@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.library_management.dto.ReaderRequest;
@@ -70,5 +71,24 @@ public class ReaderController {
         } catch (Exception ex){
             return ResponseEntity.notFound().build();
         }
+    }
+    /**
+     * Tìm kiếm độc giả theo username chính xác
+     * GET /api/readers/search?username=johndoe
+     */
+    @GetMapping("/search")
+    public ResponseEntity<List<Reader>> searchReadersByUsername(@RequestParam String username){
+        List<Reader> readers = readerService.findByUsername(username);
+        return ResponseEntity.ok(readers);
+    }
+
+    /**
+     * Tìm kiếm độc giả chứa từ khóa trong username
+     * GET /api/readers/search/keyword?keyword=john
+     */
+    @GetMapping("/search/keyword")
+    public ResponseEntity<List<Reader>> searchReadersByUsernameContaining(@RequestParam String keyword){
+        List<Reader> readers = readerService.findByUsernameContaining(keyword);
+        return ResponseEntity.ok(readers);
     }
 }

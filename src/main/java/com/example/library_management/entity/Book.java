@@ -27,7 +27,7 @@ public class Book {
     @Field(type = FieldType.Keyword)
     private String link_file;
 
-    @ManyToMany 
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "books_categories", 
         joinColumns = @JoinColumn(name = "book_id"),
@@ -35,7 +35,7 @@ public class Book {
     )
     private Set<Category> categories;
 
-    @ManyToMany 
+    @ManyToMany(fetch = FetchType.EAGER) 
     @JoinTable(
         name = "book_authors",
         joinColumns = @JoinColumn(name = "book_id"),

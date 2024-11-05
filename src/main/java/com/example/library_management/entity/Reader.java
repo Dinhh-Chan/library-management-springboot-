@@ -42,7 +42,7 @@ public class Reader {
     private UserRole role; // ADMIN hoặc USER
 
     // Mối quan hệ một-nhiều với Borrowing
-    @OneToMany(mappedBy = "reader", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "reader", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
     @JsonManagedReference  // Để tránh đệ quy khi serialize JSON
     private Set<Borrowing> borrowings;
 

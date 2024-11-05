@@ -94,12 +94,12 @@ public class BookService {
     }
 
     // Tìm sách chứa từ khóa trong tiêu đề
-    public List<Book> searchByTitleKeyword(String keyword) {
+    public List<Book> findByTitleContaining(String keyword) {
         return bookElasticsearchRepository.findByTitleContaining(keyword);
     }
 
     // Tìm sách chứa từ khóa trong tên tác giả
-    public List<Book> searchByAuthorKeyword(String keyword) {
+    public List<Book> findByAuthorNameContaining(String keyword) {
         return bookElasticsearchRepository.findByAuthorNameContaining(keyword);
     }
 }

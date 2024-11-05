@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.library_management.dto.CategoryRequest;
@@ -70,5 +71,24 @@ public class CategoryController {
         } catch (Exception ex){
             return ResponseEntity.notFound().build();
         }
+    }
+        /**
+     * Tìm kiếm danh mục theo tên chính xác
+     * GET /api/categories/search?categoryName=Programming
+     */
+    @GetMapping("/search")
+    public ResponseEntity<List<Category>> searchCategoriesByName(@RequestParam String categoryName){
+        List<Category> categories = categoryService.findByCategoryName(categoryName);
+        return ResponseEntity.ok(categories);
+    }
+
+    /**
+     * Tìm kiếm danh mục chứa từ khóa trong tên
+     * GET /api/categories/search/keyword?keyword=Prog
+     */
+    @GetMapping("/search/keyword")
+    public ResponseEntity<List<Category>> searchCategoriesByNameContaining(@RequestParam String keyword){
+        List<Category> categories = categoryService.findByCategoryNameContaining(keyword);
+        return ResponseEntity.ok(categories);
     }
 }

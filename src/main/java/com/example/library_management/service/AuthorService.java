@@ -67,7 +67,10 @@ public class AuthorService {
     }
 
     // Tìm tác giả chứa từ khóa trong tên
-    public List<Author> searchByNameKeyword(String keyword) {
+    /**
+     * Tìm kiếm tác giả chứa từ khóa trong tên
+     */
+    public List<Author> findByNameContaining(String keyword) {
         return authorElasticsearchRepository.findByNameContaining(keyword);
     }
 }

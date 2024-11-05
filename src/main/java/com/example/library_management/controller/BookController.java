@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.library_management.dto.BookRequest;
@@ -69,4 +70,44 @@ public class BookController {
             return ResponseEntity.notFound().build();
         }
     }  
+    /**
+     * Tìm kiếm sách theo tiêu đề chính xác
+     * GET /api/books/search?title=Effective Java
+     */
+    @GetMapping("/search")
+    public ResponseEntity<List<Book>> searchBooksByTitle(@RequestParam String title){
+        List<Book> books = bookService.findByTitle(title);
+        return ResponseEntity.ok(books);
+    }
+
+    /**
+     * Tìm kiếm sách chứa từ khóa trong tiêu đề
+     * GET /api/books/search/keyword?keyword=Java
+     */
+    @GetMapping("/search/keyword")
+    public ResponseEntity<List<Book>> searchBooksByTitleContaining(@RequestParam String keyword){
+        List<Book> books = bookService.findByTitleContaining(keyword);
+        return ResponseEntity.ok(books);
+    }
+
+    /**
+     * Tìm kiếm sách theo tên tác giả
+     * GET /api/books/search/author?authorName=John
+     */
+    @GetMapping("/search/author")
+    public ResponseEntity<List<Book>> searchBooksByAuthorName(@RequestParam String authorName){
+        List<Book> books = bookService.findByAuthorName(authorName);
+        return ResponseEntity.ok(books);
+    }
+
+    /**
+     * Tìm kiếm sách chứa từ khóa trong tên tác giả
+     * GET /api/books/search/author/keyword?keyword=John
+     */
+    @GetMapping("/search/author/keyword")
+    public ResponseEntity<List<Book>> searchBooksByAuthorNameContaining(@RequestParam String keyword){
+        List<Book> books = bookService.findByAuthorNameContaining(keyword);
+        return ResponseEntity.ok(books);
+    }
+
 }

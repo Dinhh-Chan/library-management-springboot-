@@ -25,7 +25,7 @@ public class Author {
     @Field(type = FieldType.Text)
     private String bio ;
 
-    @ManyToMany(mappedBy= "authors")
+    @ManyToMany(mappedBy= "authors",fetch = FetchType.EAGER)
     @JsonBackReference  // Để tránh đệ quy khi serialize JSON
     private Set<Book> books;
 

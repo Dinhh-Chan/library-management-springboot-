@@ -2,6 +2,7 @@ package com.example.library_management.service;
 
 import java.util.List;
 
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +24,7 @@ import com.example.library_management.repository.jpa.BorrowingRepository;
 import com.example.library_management.repository.jpa.CategoryRepository;
 import com.example.library_management.repository.jpa.InventoryRepository;
 import com.example.library_management.repository.jpa.ReaderRepository;
+import jakarta.transaction.Transactional;
 
 import jakarta.annotation.PostConstruct;
 
@@ -69,31 +71,39 @@ public class DataSyncService {
         syncBorrowings();
     }
 
+    @Transactional
     private void syncBooks() {
         List<Book> books = bookRepository.findAll();
+        books.forEach(book -> Hibernate.initialize(book.getAuthors()));  // Khởi tạo quan hệ authors
         bookElasticsearchRepository.saveAll(books);
     }
 
+    @Transactional
     private void syncAuthors() {
         List<Author> authors = authorRepository.findAll();
         authorElasticsearchRepository.saveAll(authors);
     }
 
+    @Transactional
     private void syncCategories() {
         List<Category> categories = categoryRepository.findAll();
         categoryElasticsearchRepository.saveAll(categories);
     }
 
+    @Transactional
     private void syncInventory() {
         List<Inventory> inventories = inventoryRepository.findAll();
         inventoryElasticsearchRepository.saveAll(inventories);
     }
 
+    @Transactional
     private void syncReaders() {
         List<Reader> readers = readerRepository.findAll();
+        readers.forEach(reader -> Hibernate.initialize(reader.getBorrowings()));  // Khởi tạo quan hệ borrowings
         readerElasticsearchRepository.saveAll(readers);
     }
 
+    @Transactional
     private void syncBorrowings() {
         List<Borrowing> borrowings = borrowingRepository.findAll();
         borrowingElasticsearchRepository.saveAll(borrowings);

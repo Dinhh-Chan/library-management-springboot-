@@ -15,7 +15,7 @@ public class Inventory {
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name="book_id", nullable=false, unique=true)
     @JsonManagedReference  // Để tránh đệ quy khi serialize JSON
     private Book book;

@@ -66,7 +66,7 @@ public class CategoryService {
     }
 
     // Tìm danh mục chứa từ khóa trong tên
-    public List<Category> searchByCategoryNameKeyword(String keyword) {
+    public List<Category> findByCategoryNameContaining(String keyword) {
         return categoryElasticsearchRepository.findByCategoryNameContaining(keyword);
     }
 }

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.library_management.dto.AuthorRequest;
@@ -71,5 +72,23 @@ public class AuthorController {
         } catch (Exception ex){
             return ResponseEntity.notFound().build();
         }
+    }
+        /**
+     * Tìm kiếm tác giả theo tên chính xác
+     * GET /api/authors/search?name=John
+     */
+    @GetMapping("/search")
+    public ResponseEntity<List<Author>> searchAuthorsByName(@RequestParam String name){
+        List<Author> authors = authorService.findByName(name);
+        return ResponseEntity.ok(authors);
+    }
+        /**
+     * Tìm kiếm tác giả chứa từ khóa trong tên
+     * GET /api/authors/search?keyword=John
+     */
+    @GetMapping("/search/keyword")
+    public ResponseEntity<List<Author>> searchAuthorsByNameContaining(@RequestParam String keyword){
+        List<Author> authors = authorService.findByNameContaining(keyword);
+        return ResponseEntity.ok(authors);
     }
 }

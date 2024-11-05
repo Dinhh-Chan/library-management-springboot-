@@ -21,7 +21,7 @@ public class Category {
     @Field(type = FieldType.Text)
     private String categoryName;
 
-    @ManyToMany(mappedBy= "categories")
+    @ManyToMany(mappedBy= "categories",fetch = FetchType.EAGER)
     @JsonBackReference  // Để tránh đệ quy khi serialize JSON
     private Set<Book> books; 
 

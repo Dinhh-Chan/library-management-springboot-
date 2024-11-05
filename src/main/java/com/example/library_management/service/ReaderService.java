@@ -78,7 +78,7 @@ public class ReaderService {
     }
 
     // Tìm người đọc chứa từ khóa trong username
-    public List<Reader> searchByUsernameKeyword(String keyword) {
+    public List<Reader> findByUsernameContaining(String keyword) {
         return readerElasticsearchRepository.findByUsernameContaining(keyword);
     }
 }
